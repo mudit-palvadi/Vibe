@@ -20,7 +20,7 @@ class MusicSlab extends ConsumerWidget {
     final isPlaying = isPlayingAsync.value ?? false;
     final durationAsync = ref.watch(currentSongDurationProvider);
     final userFavourites = ref.watch(
-      currentUserProvider.select((data) => data!.favSongs),
+      currentUserProvider.select((data) => data?.favSongs ?? []),
     );
 
     final duration = durationAsync.value ?? Duration.zero;

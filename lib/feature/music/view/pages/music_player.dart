@@ -34,7 +34,7 @@ class _MusicPlayerState extends ConsumerState<MusicPlayer> {
   @override
   Widget build(BuildContext context) {
     final userFavourites = ref.watch(
-      currentUserProvider.select((data) => data!.favSongs),
+      currentUserProvider.select((data) => data?.favSongs ?? []),
     );
     final currentSong = ref.watch(currentSongProvider);
     final currentSongColorAsync = ref.watch(currentSongColorProvider);
@@ -283,10 +283,13 @@ class _MusicPlayerState extends ConsumerState<MusicPlayer> {
                         },
                         icon: Builder(
                           builder: (context) {
-                            final isFav = userFavourites
-                                .any((fav) => fav.songId == currentSong.id);
+                            final isFav = userFavourites.any(
+                              (fav) => fav.songId == currentSong.id,
+                            );
                             return Icon(
-                              isFav ? CupertinoIcons.heart_fill : CupertinoIcons.heart,
+                              isFav
+                                  ? CupertinoIcons.heart_fill
+                                  : CupertinoIcons.heart,
                               color: isFav
                                   ? VibeColors.pink
                                   : VibeColors.white.withValues(alpha: 0.6),

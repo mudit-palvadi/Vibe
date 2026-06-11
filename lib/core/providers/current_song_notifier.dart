@@ -90,7 +90,10 @@ class CurrentSongNotifier extends _$CurrentSongNotifier {
       });
       player.play();
     } catch (e, st) {
-      developer.log('Audio player error', error: e, stackTrace: st);
+      final errorStr = e.toString();
+      if (e is! PlayerInterruptedException && !errorStr.contains('PlayerInterruptedException') && !errorStr.contains('Connection aborted')) {
+        developer.log('Audio player error', error: e, stackTrace: st);
+      }
       if (_latestRequestedSongId == song.id) {
         state = null;
       }
@@ -126,9 +129,9 @@ class CurrentSongNotifier extends _$CurrentSongNotifier {
     _latestRequestedSongId = null;
     _playerStateSubscription?.cancel();
     _playerStateSubscription = null;
+    state = null;
     final player = ref.read(audioPlayerInstanceProvider);
     await player.stop();
-    state = null;
   }
 }
 
