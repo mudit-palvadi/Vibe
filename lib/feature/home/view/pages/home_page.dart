@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vibe/core/constants.dart';
 import 'package:vibe/core/theme/app_colors.dart';
-import 'package:vibe/feature/auth/viewmodel/auth_viewmodel.dart';
+import 'package:vibe/core/providers/current_user_notifier.dart';
 import 'package:vibe/core/widgets/home_appbar.dart';
 import 'package:vibe/feature/home/view/widgets/music_mix_carousel.dart';
 import 'package:vibe/feature/home/view/widgets/playlist_carousel.dart';
@@ -15,7 +15,7 @@ class HomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final songsList = ref.watch(getAllSongsProvider);
-    final userName = ref.read(authViewModelProvider).value?.name.split(" ")[0];
+    final userName = ref.watch(currentUserProvider)?.name.split(' ')[0] ?? '';
 
     return Scaffold(
       body: songsList.when(
@@ -31,13 +31,13 @@ class HomePage extends ConsumerWidget {
                   child: Column(
                     children: [
                       const SizedBox(height: 10),
-    
-                      UserHeader(userName: userName!),
-    
+
+                      UserHeader(userName: userName),
+
                       MusicMixCarousel(songs: songs),
-    
+
                       const SizedBox(height: 30),
-    
+
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -49,7 +49,7 @@ class HomePage extends ConsumerWidget {
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-    
+
                           const Text(
                             "View all",
                             style: TextStyle(
@@ -61,12 +61,12 @@ class HomePage extends ConsumerWidget {
                           ),
                         ],
                       ),
-    
+
                       const SizedBox(height: 10),
-    
+
                       PlaylistCarousel(),
 
-                      const SizedBox(height: 100,),
+                      const SizedBox(height: 100),
                     ],
                   ),
                 ),
