@@ -152,6 +152,7 @@ class _MusicPlayerState extends ConsumerState<MusicPlayer> {
                       itemCount: songs.isEmpty ? 1 : songs.length,
                       itemWidth: MediaQuery.of(context).size.width * 0.82,
                       itemHeight: MediaQuery.of(context).size.width * 0.82,
+                      scrollDirection: Axis.horizontal,
                       initialPage: songs.isNotEmpty
                           ? songs
                                 .indexWhere((s) => s.id == currentSong.id)

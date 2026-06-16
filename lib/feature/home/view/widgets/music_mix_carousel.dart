@@ -29,6 +29,7 @@ class _MusicMixCarouselState extends ConsumerState<MusicMixCarousel> {
         itemCount: widget.songs.length,
         itemWidth: 180,
         itemHeight: 180,
+        scrollDirection: Axis.horizontal,
         initialPage: widget.songs.length ~/ 2,
         nearCardSpacing: 40,
         farCardSpacing: 45,

@@ -38,6 +38,7 @@ class _PlaylistCarouselState extends ConsumerState<PlaylistCarousel> {
             itemCount: playlists.length,
             itemWidth: 180,
             itemHeight: 180,
+            scrollDirection: Axis.horizontal,
             initialPage: initialPage,
             nearCardSpacing: 50,
             farCardSpacing: 60,
