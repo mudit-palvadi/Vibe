@@ -12,7 +12,6 @@ dependencies:
 
   cupertino_icons: ^1.0.8
   font_awesome_flutter: ^11.0.0
-  supabase_flutter: ^2.12.4
   hive_flutter: ^1.1.0
   flutter_dotenv: ^6.0.1
   flutter_riverpod: ^3.3.1
@@ -33,6 +32,7 @@ dependencies:
   just_audio_background: ^0.0.1-beta.17
   precached_network_image: ^1.4.1
   skeletonizer: ^2.1.3
+  google_sign_in_all_platforms: ^2.0.3
 
 dev_dependencies:
   flutter_test:
