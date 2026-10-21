@@ -6,6 +6,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:vibe/core/constants.dart';
 import 'package:vibe/core/failure/failure.dart';
 import 'package:vibe/core/services/api_service.dart';
+import 'package:vibe/core/services/body_hash.dart';
 import 'package:vibe/feature/home/model/song_model.dart';
 
 part 'music_repository.g.dart';
@@ -26,48 +27,44 @@ class MusicRepository {
   }) async {
     try {
       // the server tells where the files should go
+      final initBody = jsonEncode({
+        'song_name': songName,
+        'artist': artist,
+        'tags': tags,
+        'audio_filename': _fileName(audio.path),
+        'thumbnail_filename': _fileName(image.path),
+      });
       final initResponse = await http.post(
         Uri.parse('${ServerConstant.serverURL}/song/upload-init'),
-        headers: {
-          'Content-Type': 'application/json',
-          ServerConstant.sessionHeader: token,
-        },
-        body: jsonEncode({
-          'song_name': songName,
-          'artist': artist,
-          'tags': tags,
-          'audio_filename': _fileName(audio.path),
-          'thumbnail_filename': _fileName(image.path),
-        }),
+        headers: bodyHeaders(initBody, sessionToken: token),
+        body: initBody,
       );
 
       if (initResponse.statusCode != 201) {
         return Left(AppFailure(ApiService.detailOf(initResponse)));
       }
 
-      final initBody = jsonDecode(initResponse.body) as Map<String, dynamic>;
-      final audioPart = initBody['audio'] as Map<String, dynamic>;
-      final thumbnailPart = initBody['thumbnail'] as Map<String, dynamic>;
+      final initData = jsonDecode(initResponse.body) as Map<String, dynamic>;
+      final audioPart = initData['audio'] as Map<String, dynamic>;
+      final thumbnailPart = initData['thumbnail'] as Map<String, dynamic>;
 
       // the files go straight to the storage
       await _putFile(audioPart, audio);
       await _putFile(thumbnailPart, image);
 
       // then the server makes the song
+      final completeBody = jsonEncode({
+        'song_id': initData['song_id'],
+        'song_name': songName,
+        'artist': artist,
+        'tags': tags,
+        'audio_key': audioPart['key'],
+        'thumbnail_key': thumbnailPart['key'],
+      });
       final completeResponse = await http.post(
         Uri.parse('${ServerConstant.serverURL}/song/upload-complete'),
-        headers: {
-          'Content-Type': 'application/json',
-          ServerConstant.sessionHeader: token,
-        },
-        body: jsonEncode({
-          'song_id': initBody['song_id'],
-          'song_name': songName,
-          'artist': artist,
-          'tags': tags,
-          'audio_key': audioPart['key'],
-          'thumbnail_key': thumbnailPart['key'],
-        }),
+        headers: bodyHeaders(completeBody, sessionToken: token),
+        body: completeBody,
       );
 
       if (completeResponse.statusCode != 201) {
@@ -170,13 +167,11 @@ class MusicRepository {
     required String token,
   }) async {
     try {
+      final favBody = jsonEncode({'song_id': songId});
       final res = await http.post(
         Uri.parse('${ServerConstant.serverURL}/song/favourite'),
-        body: jsonEncode({'song_id': songId}),
-        headers: {
-          'Content-Type': 'application/json',
-          ServerConstant.sessionHeader: token,
-        },
+        body: favBody,
+        headers: bodyHeaders(favBody, sessionToken: token),
       );
       var resBodyMap = jsonDecode(res.body);
 

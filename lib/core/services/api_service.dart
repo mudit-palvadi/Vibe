@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:vibe/core/constants.dart';
+import 'package:vibe/core/services/body_hash.dart';
 
 class ApiService {
   ApiService({http.Client? client}) : _client = client ?? http.Client();
@@ -10,10 +11,11 @@ class ApiService {
 
   /// the backend takes the google id token and gives a session token back
   Future<Map<String, dynamic>> loginWithGoogle(String idToken) async {
+    final body = jsonEncode({'id_token': idToken});
     final response = await _client.post(
       Uri.parse('${ServerConstant.serverURL}/auth/login'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'id_token': idToken}),
+      headers: bodyHeaders(body),
+      body: body,
     );
 
     if (response.statusCode != 200) {
@@ -29,13 +31,11 @@ class ApiService {
     required String sessionToken,
     required String googleRefreshToken,
   }) async {
+    final body = jsonEncode({'refresh_token': googleRefreshToken});
     final response = await _client.post(
       Uri.parse('${ServerConstant.serverURL}/auth/refresh'),
-      headers: {
-        'Content-Type': 'application/json',
-        ServerConstant.sessionHeader: sessionToken,
-      },
-      body: jsonEncode({'refresh_token': googleRefreshToken}),
+      headers: bodyHeaders(body, sessionToken: sessionToken),
+      body: body,
     );
 
     if (response.statusCode != 200) {
