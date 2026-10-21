@@ -1,0 +1,6 @@
+# the flutter tool writes these files with unix line endings, do not convert them
+linux/flutter/generated_plugin_registrant.cc -text
+linux/flutter/generated_plugins.cmake -text
+macos/Flutter/GeneratedPluginRegistrant.swift -text
+windows/flutter/generated_plugin_registrant.cc -text
+windows/flutter/generated_plugins.cmake -text
