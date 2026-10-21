@@ -7,6 +7,13 @@ class VibePadding {
 
 class ServerConstant {
   static String serverURL = dotenv.env['BACKEND_URL']!;
+
+  // the google oauth client of the app, it is a web type client that opens
+  // the browser and comes back to http://localhost:<redirectPort>
+  static String googleClientId = dotenv.env['GOOGLE_CLIENT_ID'] ?? '';
+  static String googleClientSecret = dotenv.env['GOOGLE_CLIENT_SECRET'] ?? '';
+  static int googleRedirectPort =
+      int.tryParse(dotenv.env['GOOGLE_REDIRECT_PORT'] ?? '') ?? 8000;
 }
 
 class PlaylistWords {
