@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:vibe/core/services/recently_played_service.dart';
-import 'package:vibe/core/services/supabase_service.dart';
+import 'package:vibe/core/services/session_storage.dart';
 import 'package:vibe/core/theme/theme.dart';
 import 'package:vibe/feature/auth/view/pages/auth_wrapper.dart';
 
@@ -14,12 +14,10 @@ void main() async {
   //initialize hive
   await Hive.initFlutter();
   await RecentlyPlayedService.init();
+  await SessionStorage.init();
 
   //load .env
   await dotenv.load(fileName: ".env");
-
-  //initialize supabase
-  await SupabaseService.init();
 
   //just audio init
   await JustAudioBackground.init(
