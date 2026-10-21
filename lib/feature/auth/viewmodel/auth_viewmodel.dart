@@ -17,22 +17,37 @@ class AuthViewModel extends _$AuthViewModel {
     final repository = ref.watch(authRepositoryProvider);
     _currentUserNotifier = ref.watch(currentUserProvider.notifier);
 
-    if (!repository.isLoggedIn) {
+    final isSignedIn = await repository.restoreSession();
+
+    if (!isSignedIn) {
       return null;
     }
 
     final user = await repository.fetchCurrentUser();
-    _currentUserNotifier.addUser(user!);
+
+    if (user != null) {
+      _currentUserNotifier.addUser(user);
+    }
+
     return user;
   }
 
   Future<void> loginWithGoogle() async {
     final repository = ref.read(authRepositoryProvider);
-    await repository.signInWithGoogle();
+
     state = const AsyncLoading();
-    state = await AsyncValue.guard(repository.fetchCurrentUser);
-    final user = await repository.fetchCurrentUser();
-    _currentUserNotifier.addUser(user!);
+    state = await AsyncValue.guard(() async {
+      await repository.signInWithGoogle();
+
+      final user = await repository.fetchCurrentUser();
+
+      if (user == null) {
+        throw Exception('The user could not be loaded');
+      }
+
+      _currentUserNotifier.addUser(user);
+      return user;
+    });
   }
 
   Future<void> logout() async {
