@@ -8,6 +8,10 @@ class VibePadding {
 class ServerConstant {
   static String serverURL = dotenv.env['BACKEND_URL']!;
 
+  // cloudfront signs the request it sends to the lambda, so the session token
+  // of the user comes in its own header
+  static const String sessionHeader = 'x-vibe-auth';
+
   // the google oauth client of the app, it is a web type client that opens
   // the browser and comes back to http://localhost:<redirectPort>
   static String googleClientId = dotenv.env['GOOGLE_CLIENT_ID'] ?? '';

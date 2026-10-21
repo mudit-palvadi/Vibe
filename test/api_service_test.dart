@@ -66,7 +66,7 @@ void main() {
 
     expect(response['session_token'], 'session-2');
     expect(sent.url.toString(), 'https://vibe.test/auth/refresh');
-    expect(sent.headers['Authorization'], 'Bearer session-1');
+    expect(sent.headers['x-vibe-auth'], 'session-1');
     expect(jsonDecode(sent.body), {'refresh_token': 'google-refresh'});
   });
 
@@ -83,8 +83,8 @@ void main() {
     final response = await service.getCurrentUserData('session-1');
 
     expect(response['id'], 'user-1');
-    expect(sent.url.toString(), 'https://vibe.test/auth/');
-    expect(sent.headers['Authorization'], 'Bearer session-1');
+    expect(sent.url.toString(), 'https://vibe.test/auth');
+    expect(sent.headers['x-vibe-auth'], 'session-1');
   });
 
   test('a body that is not json gives the status code', () {

@@ -33,7 +33,7 @@ class ApiService {
       Uri.parse('${ServerConstant.serverURL}/auth/refresh'),
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer $sessionToken',
+        ServerConstant.sessionHeader: sessionToken,
       },
       body: jsonEncode({'refresh_token': googleRefreshToken}),
     );
@@ -47,8 +47,8 @@ class ApiService {
 
   Future<Map<String, dynamic>> getCurrentUserData(String token) async {
     final response = await _client.get(
-      Uri.parse('${ServerConstant.serverURL}/auth/'),
-      headers: {'Authorization': 'Bearer $token'},
+      Uri.parse('${ServerConstant.serverURL}/auth'),
+      headers: {ServerConstant.sessionHeader: token},
     );
 
     if (response.statusCode != 200) {

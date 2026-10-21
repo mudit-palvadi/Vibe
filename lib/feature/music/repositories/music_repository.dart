@@ -30,7 +30,7 @@ class MusicRepository {
         Uri.parse('${ServerConstant.serverURL}/song/upload-init'),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
+          ServerConstant.sessionHeader: token,
         },
         body: jsonEncode({
           'song_name': songName,
@@ -58,7 +58,7 @@ class MusicRepository {
         Uri.parse('${ServerConstant.serverURL}/song/upload-complete'),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
+          ServerConstant.sessionHeader: token,
         },
         body: jsonEncode({
           'song_id': initBody['song_id'],
@@ -111,7 +111,7 @@ class MusicRepository {
         Uri.parse('${ServerConstant.serverURL}/song/list'),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
+          ServerConstant.sessionHeader: token,
         },
       );
       var resBodyMap = jsonDecode(res.body);
@@ -142,7 +142,7 @@ class MusicRepository {
         Uri.parse('${ServerConstant.serverURL}/song/list-favourites'),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
+          ServerConstant.sessionHeader: token,
         },
       );
       var resBodyMap = jsonDecode(res.body);
@@ -175,7 +175,7 @@ class MusicRepository {
         body: jsonEncode({'song_id': songId}),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
+          ServerConstant.sessionHeader: token,
         },
       );
       var resBodyMap = jsonDecode(res.body);
@@ -200,7 +200,7 @@ class MusicRepository {
         Uri.parse('${ServerConstant.serverURL}/song/search?q=${Uri.encodeComponent(query)}'),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
+          ServerConstant.sessionHeader: token,
         },
       );
       var resBodyMap = jsonDecode(res.body);
