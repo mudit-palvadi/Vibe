@@ -97,7 +97,7 @@ void main() {
     );
   });
 
-  test('the session comes back when the app is opened again', () async {
+  test('the stored session token is used when it still works', () async {
     await SessionStorage.save(
       sessionToken: 'old-session',
       googleRefreshToken: 'google-refresh',
@@ -106,17 +106,72 @@ void main() {
     final repository = AuthRepository(
       apiService: ApiService(
         client: MockClient(
-          (request) async => http.Response(
-            jsonEncode({'session_token': 'new-session'}),
-            200,
-          ),
+          (request) async => http.Response(jsonEncode({'id': 'user-1'}), 200),
         ),
       ),
       googleAuth: FakeGoogleAuth(),
     );
 
     expect(await repository.restoreSession(), isTrue);
+    expect(repository.token, 'old-session');
+  });
+
+  test('the google refresh token gives a new session when the old one is gone',
+      () async {
+    await SessionStorage.save(
+      sessionToken: 'old-session',
+      googleRefreshToken: 'google-refresh',
+    );
+
+    final repository = AuthRepository(
+      apiService: ApiService(
+        client: MockClient((request) async {
+          if (request.url.path == '/auth') {
+            return http.Response(
+              jsonEncode({'detail': 'Invalid session token'}),
+              401,
+            );
+          }
+
+          return http.Response(jsonEncode({'session_token': 'new-session'}), 200);
+        }),
+      ),
+      googleAuth: FakeGoogleAuth(),
+    );
+
+    expect(await repository.restoreSession(), isTrue);
     expect(repository.token, 'new-session');
+  });
+
+  test('a new id token from google brings the session back on the phone',
+      () async {
+    await SessionStorage.save(sessionToken: 'old-session');
+
+    final google = FakeGoogleAuth(
+      credentials: const GoogleSignInCredentials(
+        accessToken: 'access',
+        idToken: 'google-id-token',
+      ),
+    );
+
+    final repository = AuthRepository(
+      apiService: ApiService(
+        client: MockClient((request) async {
+          if (request.url.path == '/auth/login') {
+            return http.Response(
+              jsonEncode({'session_token': 'session-from-google'}),
+              200,
+            );
+          }
+
+          return http.Response(jsonEncode({'detail': 'Invalid session token'}), 401);
+        }),
+      ),
+      googleAuth: google,
+    );
+
+    expect(await repository.restoreSession(), isTrue);
+    expect(repository.token, 'session-from-google');
   });
 
   test('a google session that is gone signs the user out', () async {

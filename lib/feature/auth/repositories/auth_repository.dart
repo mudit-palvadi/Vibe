@@ -27,12 +27,57 @@ class AuthRepository {
       return false;
     }
 
+    // the session token works for 30 days, it is checked first
+    if (await _sessionTokenWorks()) {
+      return true;
+    }
+
+    // the google refresh token proves that the user is still there, on the
+    // phone google does not hand it over so this does not work there
     if (await refreshSession()) {
+      return true;
+    }
+
+    // on the phone google can give a new id token without asking the user
+    if (await _signInSilently()) {
       return true;
     }
 
     await signOut();
     return false;
+  }
+
+  /// asks the backend if the session token is still good
+  Future<bool> _sessionTokenWorks() async {
+    try {
+      await _api.getCurrentUserData(_sessionToken!);
+
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// signs in again with google without asking the user for anything
+  Future<bool> _signInSilently() async {
+    try {
+      final credentials = await _googleAuth.silentSignIn();
+      final idToken = credentials?.idToken;
+
+      if (idToken == null) {
+        return false;
+      }
+
+      final response = await _api.loginWithGoogle(idToken);
+
+      _sessionToken = response['session_token'] as String;
+
+      await SessionStorage.save(sessionToken: _sessionToken!);
+
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<void> signInWithGoogle() async {
