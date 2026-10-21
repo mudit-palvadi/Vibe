@@ -4,10 +4,14 @@ import 'package:vibe/core/services/google_auth_service.dart';
 import 'package:vibe/core/services/session_storage.dart';
 
 class AuthRepository {
-  AuthRepository({GoogleAuthService? googleAuthService})
-    : _googleAuth = googleAuthService ?? GoogleAuthService();
+  AuthRepository({
+    ApiService? apiService,
+    GoogleAuth? googleAuth,
+  }) : _api = apiService ?? ApiService(),
+       _googleAuth = googleAuth ?? GoogleAuthService();
 
-  final GoogleAuthService _googleAuth;
+  final ApiService _api;
+  final GoogleAuth _googleAuth;
 
   String? _sessionToken;
 
@@ -38,7 +42,7 @@ class AuthRepository {
       throw Exception('The google sign in did not give an id token');
     }
 
-    final response = await ApiService.loginWithGoogle(credentials.idToken!);
+    final response = await _api.loginWithGoogle(credentials.idToken!);
 
     _sessionToken = response['session_token'] as String;
 
@@ -53,7 +57,7 @@ class AuthRepository {
       return null;
     }
 
-    final response = await ApiService.getCurrentUserData(_sessionToken!);
+    final response = await _api.getCurrentUserData(_sessionToken!);
 
     return UserModel.fromJson(response);
   }
@@ -68,7 +72,7 @@ class AuthRepository {
     }
 
     try {
-      final response = await ApiService.refreshSession(
+      final response = await _api.refreshSession(
         sessionToken: _sessionToken!,
         googleRefreshToken: googleRefreshToken,
       );
