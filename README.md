@@ -1,205 +1,163 @@
 # Vibe
 
 [![CI](https://github.com/mudit-palvadi/Vibe/actions/workflows/ci.yml/badge.svg)](https://github.com/mudit-palvadi/Vibe/actions/workflows/ci.yml)
+[![Flutter](https://img.shields.io/badge/Flutter-3.44.6-02569B?logo=flutter&logoColor=white)](https://flutter.dev/)
+[![Dart](https://img.shields.io/badge/Dart-3.11-0175C2)](https://dart.dev/)
+[![Riverpod](https://img.shields.io/badge/Riverpod-3.3-7C3AED)](https://riverpod.dev/)
+[![Google Sign-In](https://img.shields.io/badge/Google_Sign-In-4285F4?logo=google&logoColor=white)](https://developers.google.com/identity/protocols/oauth2)
+[![just_audio](https://img.shields.io/badge/just_audio-0.10-FF6D00)](https://pub.dev/packages/just_audio)
+[![Hive](https://img.shields.io/badge/Hive-1.1-FFB300?logo=flutter&logoColor=white)](https://pub.dev/packages/hive_flutter)
+[![crypto](https://img.shields.io/badge/crypto-3.0-795548)](https://pub.dev/packages/crypto)
 
-Vibe is a cross platform music app built with Flutter. The users sign in with their Google account, listen to the songs of a shared catalog, search it, keep their favourites, and upload their own songs.
+A music app for the desktop, the phone and the web. The user signs in with their Google account, listens to the songs of the shared catalog, favourites them, and can add a song of their own.
 
-The app talks to the [Vibe backend](https://github.com/mudit-palvadi/Vibe-Backend), a FastAPI service that runs on AWS as a Lambda behind CloudFront. The audio files and the covers live in an S3 bucket, the app uploads to the bucket itself and never sends the files through the backend.
+The backend is a FastAPI service on AWS, it lives in [mudit-palvadi/Vibe-Backend](https://github.com/mudit-palvadi/Vibe-Backend).
 
 ---
 
 ## Screens
 
-| Home | All tracks | Favourites |
+| | | |
 | :---: | :---: | :---: |
-| ![The home screen with the music mix carousel](docs/screenshots/home.png) | ![The library with every song of the catalog](docs/screenshots/tracks.png) | ![The favourites of the user](docs/screenshots/favourites.png) |
+| ![the home screen](docs/screenshots/home.png) | ![the tracks screen](docs/screenshots/tracks.png) | ![the favourites screen](docs/screenshots/favourites.png) |
+| The home screen | The tracks of an album | The favourites of the user |
 
 ---
 
-## Features
+## What it does
 
-- **Google sign in.** The app opens the system browser, the Google id token is checked by the backend, and the app gets a session token that lasts 30 days.
-- **A session that survives a restart.** The session token is kept in a hive box on the device. When the app is opened again it asks the backend whether the token is still good, and only signs in again when it is not.
-- **Background playback.** JustAudio with a background service keeps the music playing when the app is not in front.
-- **Waveform scrubber.** The player draws the waveform of the song and lets you move through it.
-- **Search.** The search looks at the title, the artist, and the tags of the songs while you type.
-- **Favourites.** The heart on a song adds it to the favourites of the user or takes it away again, and the library keeps a list of them.
-- **Recently played.** The songs that were played are kept on the device in a hive box.
-- **Uploads.** The user picks an audio file and a cover, fills in the title, the artist, and the tags, and the app sends the files straight to the bucket with the links the backend gives it.
-- **A shared catalog.** Every song is visible to everyone, an upload joins the catalog for the whole app.
+- **Sign in with Google.** The system browser opens, the user comes back in the app, and the session is kept for the next time the app starts.
+- **A session that survives a restart.** The token is kept on the device, it is renewed quietly when it is about to run out.
+- **Playback in the background.** The music keeps playing when the app is closed, with the system media controls.
+- **A waveform to scrub through.** The song shows its wave, the position can be dragged.
+- **Search** on the title, the artist and the tags.
+- **Favourites**, kept per user, with the recently played songs on top.
+- **Uploads.** The audio and the cover go straight from the app to the storage bucket, the file never passes through the backend.
+- **A shared catalog.** Every song is visible to everyone, whoever uploads one adds it for the whole app.
 
 ---
 
-## Tech stack
+## The stack
 
-| Piece | What it is used for |
+| | |
 | :--- | :--- |
-| **Flutter & Dart** | The app itself, it runs on Android, iOS, web, Windows, Linux, and macOS. |
-| **Riverpod** | The state. The providers are written with annotations and the code is made by the generator. |
-| **google_sign_in_all_platforms** | The Google sign in. It uses the system browser on the desktop and the credential manager on the phone. |
-| **JustAudio & JustAudioBackground** | The playback and the background service. |
-| **audio_waveforms** | Draws the waveform of the song in the player. |
-| **Hive** | The small things that stay on the device: the session token, the Google refresh token, and the recently played songs. |
+| **Flutter and Dart** | The app itself, one code base for Android, iOS, web, Windows, Linux and macOS. |
+| **Riverpod** | The state of the app, the user, the songs, the upload. |
+| **google_sign_in_all_platforms** | The Google sign in, on the phone and on the desktop. |
+| **just_audio** | The playback, with the background audio service. |
+| **audio_waveforms** | The wave of the song and the scrubbing. |
+| **Hive** | The session token and the recently played songs on the device. |
 | **http** | The calls to the backend and the uploads to the bucket. |
-| **crypto** | The sha256 hash of the body of a request, the CloudFront signature needs it. |
-| **file_picker** | The audio file and the cover of an upload. |
-| **fpdart** | The results of the calls, an `Either` instead of exceptions. |
-| **flutter_dotenv** | The settings of the app come from the `.env` file. |
-
----
-
-## The layout
-
-The app is split in two parts. Everything that is shared lives in `core`, everything that belongs to one screen lives in its own folder under `feature`.
-
-```text
-lib/
-├── core/
-│   ├── constants.dart               # the settings of the app and the header names
-│   ├── failure/failure.dart         # the failures the repositories can return
-│   ├── models/user_model.dart       # the user and their favourites
-│   ├── providers/                   # the state that is used everywhere
-│   │   ├── current_song_notifier.dart
-│   │   ├── current_user_notifier.dart
-│   │   └── recently_played_provider.dart
-│   ├── services/                    # the talks to the outside world
-│   │   ├── api_service.dart         # the calls to the backend
-│   │   ├── body_hash.dart           # the sha256 hash of the body of a request
-│   │   ├── google_auth_service.dart # the google sign in
-│   │   ├── recently_played_service.dart
-│   │   └── session_storage.dart     # the session token on the device
-│   ├── theme/                       # the colours and the theme
-│   ├── widgets/                     # the widgets that are used everywhere
-│   ├── fonts/ icons/ images/        # the assets of the app
-├── feature/
-│   ├── auth/                        # the sign in and the wrapper that watches it
-│   ├── home/                        # the home page with the carousels
-│   ├── library/                     # the favourites and all the tracks
-│   ├── music/                       # the player, the upload page, the models of a song
-│   └── search/                      # the search page
-├── main.dart                        # starts the app, the storage, and the audio service
-test/                                # the tests of the services and of the repositories
-```
+| **crypto** | The hash of the body, the backend needs it for every request that has a body. |
+| **file_picker** | Picking the audio file and the cover. |
+| **fpdart** | The `Either` type, so a failure is a value and not an exception. |
 
 ---
 
 ## Getting started
 
-### Prerequisites
+You need the [Flutter SDK](https://docs.flutter.dev/get-started/install) and a Google OAuth client.
 
-- The [Flutter SDK](https://docs.flutter.dev/get-started/install) (3.44 or newer)
-- A running backend, the [Vibe-Backend](https://github.com/mudit-palvadi/Vibe-Backend) repository
+1. **Get the code**
 
-### 1. Get the code
+   ```bash
+   git clone https://github.com/mudit-palvadi/Vibe.git
+   cd Vibe
+   ```
 
-```bash
-git clone https://github.com/mudit-palvadi/Vibe.git
-cd Vibe
-```
+2. **The packages**
 
-### 2. The packages
+   ```bash
+   flutter pub get
+   ```
 
-```bash
-flutter pub get
-```
+3. **The settings** — copy `.env.example` to `.env` in the root of the project and fill it in:
 
-### 3. The settings
+   ```ini
+   # the address of the backend
+   BACKEND_URL=https://d3hb9a4bci0gq5.cloudfront.net
 
-Copy `.env.example` to `.env` in the root of the project and fill in the values:
+   # the google oauth client of the app, it is a web type client with the
+   # address http://localhost:<GOOGLE_REDIRECT_PORT> as a redirect uri
+   GOOGLE_CLIENT_ID=
+   GOOGLE_CLIENT_SECRET=
+   GOOGLE_REDIRECT_PORT=8000
+   ```
 
-```ini
-# the address of the backend
-BACKEND_URL=https://d3hb9a4bci0gq5.cloudfront.net
+   The `.env` file is not in the repository, it holds the client secret.
 
-# the google oauth client of the app, a web type client with the address
-# http://localhost:<GOOGLE_REDIRECT_PORT> as a redirect uri
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-GOOGLE_REDIRECT_PORT=8000
-```
+4. **The generated code** — the view models are made by build runner:
 
-`GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` belong to the same Google client that the backend uses, the backend checks the audience of the id token against it.
+   ```bash
+   dart run build_runner build --delete-conflicting-outputs
+   ```
 
-### 4. The generated code
+5. **Run it**
 
-The Riverpod providers are written with annotations, the code of the providers is made by the generator:
-
-```bash
-dart run build_runner build --delete-conflicting-outputs
-```
-
-### 5. Run it
-
-```bash
-flutter run              # on a connected device
-flutter run -d windows   # on the desktop
-```
+   ```bash
+   flutter run            # the desktop
+   flutter run -d <id>    # a phone that is connected over usb
+   ```
 
 ---
 
 ## The Google client
 
-The app needs a Google OAuth client. The one type that works on every platform is a **Web application** client, because the Flutter package opens the system browser and comes back to a local address:
+The app needs two clients in the [Google Cloud console](https://console.cloud.google.com/):
 
-1. In the [Google Cloud console](https://console.cloud.google.com/) open **APIs & Services** → **Credentials** and make an **OAuth client ID** of the type **Web application**.
-2. Add `http://localhost:8000` as an **Authorized redirect URI**. The port is the `GOOGLE_REDIRECT_PORT` of the `.env`, the package listens on it and gets the code back there.
-3. Put the client id and the client secret in the `.env` of the app.
+**A web type client** for the desktop. The app opens the system browser and comes back to `http://localhost:8000`, so that address has to be the **Authorized redirect URI**. Its id and its secret go into the `.env` of the app.
 
-The desktop apps that are not published anywhere need nothing more than that, the secret of a web client is not a real secret and the app is a public client.
+**An Android client** for the phone. It needs the package name of the app, `com.example.vibe`, and the SHA-1 of the signing key:
 
-### On a phone
+```bash
+keytool -list -v -keystore C:\Users\<you>\.android\debug.keystore \
+  -alias androiddebugkey -storepass android -keypass android
+```
 
-An Android app also needs its own **Android** OAuth client, because the credential manager checks the package name and the signing key of the app:
-
-- the **package name** is `com.example.vibe`, it is in `android/app/build.gradle.kts`
-- the **SHA-1** of the signing key. For a debug build it is the one of `~/.android/debug.keystore`, the password of that keystore is `android`:
-
-  ```bash
-  keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android
-  ```
-
-The Android client is only there to say that this app, signed with this key, may sign in. The id token that comes back is still the one of the web client, and the backend checks that one.
+The debug key is enough when the app is not published. The id of the web client is the one the app sends to the backend, so the Android client does not have to be put anywhere.
 
 ---
 
 ## How the app talks to the backend
 
-Every call to the backend carries the session token in the **`x-vibe-auth`** header. CloudFront signs the request it sends to the Lambda and takes the `Authorization` header of the caller away, so the token needs its own header.
+The session token travels in the **`x-vibe-auth`** header. CloudFront signs the request it forwards to the backend and replaces the `Authorization` header of the caller, so the token needs a header of its own.
 
-A request with a body also needs the **`x-amz-content-sha256`** header with the sha256 hash of the body. The CloudFront signature needs it to check the body it forwards. The `bodyHeaders` helper in `lib/core/services/body_hash.dart` makes that header, it is used by every call that has a body.
+A request that has a body also needs **`x-amz-content-sha256`**, the sha256 of the body in hex. Without it the backend answers with a `403`, the signature does not match.
 
-```text
-POST /auth/login          the google id token in          → a session token that lasts 30 days
-POST /auth/refresh        the google refresh token in     → a new session token
-GET  /auth                the session token in the header → the user and their favourites
-GET  /song/list           → every song of the catalog
-GET  /song/search?q=      → the songs that start with the word
-POST /song/favourite       → adds the song to the favourites or takes it away
-GET  /song/list-favourites → the favourite songs of the user
-POST /song/upload-init    → the links for the upload
-POST /song/upload-complete → the song is saved
-```
+| Call | What it does |
+| :--- | :--- |
+| `POST /auth/login` | Sends the Google id token, gets the session token back. |
+| `POST /auth/refresh` | Sends the Google refresh token, gets a new session token back. |
+| `GET /auth` | The user and the favourite songs. |
+| `POST /song/upload-init` | Gets a song id and the two upload links. |
+| `POST /song/upload-complete` | Says that the files are uploaded, the song is saved. |
+| `GET /song/list` | Every song of the catalog. |
+| `GET /song/search?q=` | The songs that start with the text. |
+| `POST /song/favourite` | Adds the song to the favourites or takes it away. |
+| `GET /song/list-favourites` | The favourite songs of the user. |
 
-### The upload
-
-The files do not go through the backend, the 6 MB limit of a Lambda would not allow it:
-
-1. The app asks `POST /song/upload-init` with the title, the artist, the tags, and the file names.
-2. The app puts the audio file and the cover on the two links it gets back, those go straight to the bucket.
-3. The app asks `POST /song/upload-complete` with the song id, the details, and the two keys. The backend moves the files to their place and saves the song.
+**The upload** goes straight to the storage bucket: the app asks for the links, puts the audio and the cover on them, and then tells the backend that it is done. The backend never carries the file.
 
 ---
 
 ## The tests
 
 ```bash
+flutter analyze
 flutter test
 ```
 
-The tests cover the api service, the session handling of the auth repository, and the hash of the body. They do not need a backend, the calls are made to a mock.
-
 ---
+
+## The layout
+
+```text
+lib/
+├── core/        the services, the models, the theme, the shared widgets
+├── feature/     the pages, one folder for auth, home, library, music and search
+└── main.dart
+```
 
 ## The backend
 
-The backend of the app is in [mudit-palvadi/Vibe-Backend](https://github.com/mudit-palvadi/Vibe-Backend). Its readme has the details of the api, of the database, and of the deployment.
+The service the app talks to lives in [mudit-palvadi/Vibe-Backend](https://github.com/mudit-palvadi/Vibe-Backend), its readme has the endpoints, the sign in and the way it is deployed.
