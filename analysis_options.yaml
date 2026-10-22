@@ -9,9 +9,11 @@
 # packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
-# analyzer:
-#   plugins: 
-#     - custom_lint
+analyzer:
+  errors:
+    # the .env file holds the google client secret, it is not in the repository,
+    # so the analyzer should not complain that the asset is missing
+    asset_does_not_exist: ignore
 
 linter:
   # The lint rules applied to this project can be customized in the
